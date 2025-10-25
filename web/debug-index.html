@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Index.php</title>
+    
+    <!-- Simular o mesmo head do index.php -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        body { padding: 20px; background: #f8f9fa; }
+        .debug-section { 
+            background: white; 
+            padding: 20px; 
+            margin: 15px 0; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .console-log { 
+            background: #000; 
+            color: #0f0; 
+            padding: 15px; 
+            font-family: monospace; 
+            font-size: 12px;
+            height: 200px;
+            overflow-y: auto;
+            border-radius: 4px;
+        }
+        .user-info { 
+            padding: 15px; 
+            background: #f8f9fa; 
+            border-radius: 4px; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug - Index.php Simulation</h1>
+        
+        <div class="debug-section">
+            <h3>1. Simulação do Topbar</h3>
+            <div class="user-info">
+                <strong>Nome:</strong> <span id="debug-topbar-name">Carregando...</span><br>
+                <strong>Role:</strong> <span id="debug-topbar-role">Carregando...</span>
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <h3>2. Simulação do Sidenav</h3>
+            <div class="user-info">
+                <strong>Nome:</strong> <span id="debug-sidenav-name">Carregando...</span><br>
+                <strong>Role:</strong> <span id="debug-sidenav-role">Carregando...</span>
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <h3>3. Status da Carregamento</h3>
+            <div id="loading-status">Iniciando...</div>
+        </div>
+
+        <div class="debug-section">
+            <h3>4. Console Debug</h3>
+            <div class="console-log" id="debug-console"></div>
+            <button class="btn btn-secondary btn-sm mt-2" onclick="clearDebugConsole()">Limpar</button>
+        </div>
+
+        <div class="debug-section">
+            <h3>5. Ações</h3>
+            <button class="btn btn-primary" onclick="manualLoadUser()">Carregar Usuário Manualmente</button>
+            <button class="btn btn-secondary ms-2" onclick="checkAPIStatus()">Verificar API Status</button>
+            <a href="auth-sign-in.php" class="btn btn-warning ms-2">Ir para Login</a>
+            <a href="index.php" class="btn btn-success ms-2">Ir para Index Real</a>
+        </div>
+    </div>
+
+    <!-- Carregar API Client na mesma ordem do index.php -->
+    <script src="assets/js/api-client.js"></script>
+
+    <script>
+        let debugConsole = document.getElementById('debug-console');
+        let loadingStatus = document.getElementById('loading-status');
+        
+        function addDebugLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugConsole.innerHTML += `[${timestamp}] ${message}\n`;
+            debugConsole.scrollTop = debugConsole.scrollHeight;
+        }
+
+        function clearDebugConsole() {
+            debugConsole.innerHTML = '';
+        }
+
+        function updateLoadingStatus(status) {
+            loadingStatus.innerHTML = status;
+            addDebugLog(`STATUS: ${status}`);
+        }
+
+        // Simular exatamente o que acontece no index.php
+        document.addEventListener('DOMContentLoaded', function() {
+            addDebugLog('🔄 DOM carregado, iniciando debug...');
+            updateLoadingStatus('DOM carregado, verificando API Client...');
+            
+            // Função para verificar se API client está carregado
+            function waitForAPIClient(callback, attempts = 0) {
+                if (window.eventosAPI) {
+                    addDebugLog('✅ API Client carregado!');
+                    updateLoadingStatus('API Client carregado com sucesso');
+                    callback();
+                } else if (attempts < 20) {
+                    addDebugLog(`⏳ Aguardando API Client... tentativa ${attempts + 1}`);
+                    updateLoadingStatus(`Aguardando API Client... tentativa ${attempts + 1}/20`);
+                    setTimeout(() => waitForAPIClient(callback, attempts + 1), 200);
+                } else {
+                    addDebugLog('❌ API Client não carregou após 4 segundos');
+                    updateLoadingStatus('❌ ERRO: API Client não carregou');
+                }
+            }
+            
+            // Verificar autenticação após carregar API client
+            waitForAPIClient(function() {
+                if (!window.eventosAPI.isLoggedIn()) {
+                    addDebugLog('⚠️ Usuário não está logado');
+                    updateLoadingStatus('⚠️ Usuário não está logado');
+                    
+                    document.getElementById('debug-topbar-name').textContent = 'Não logado';
+                    document.getElementById('debug-topbar-role').textContent = 'Visitante';
+                    document.getElementById('debug-sidenav-name').textContent = 'Não logado';
+                    document.getElementById('debug-sidenav-role').textContent = 'Visitante';
+                } else {
+                    const user = window.eventosAPI.getCurrentUser();
+                    addDebugLog(`✅ Usuário está logado: ${user?.name}`);
+                    updateLoadingStatus(`✅ Usuário logado: ${user?.name}`);
+                    
+                    loadUserInfo(user);
+                }
+            });
+        });
+
+        function loadUserInfo(user) {
+            const roleLabels = {
+                'master': 'Administrador Master',
+                'client_admin': 'Administrador',
+                'client_organizer': 'Organizador',
+                'participant': 'Participante'
+            };
+
+            // Simular carregamento do topbar
+            document.getElementById('debug-topbar-name').textContent = user.name || 'Usuário';
+            document.getElementById('debug-topbar-role').textContent = roleLabels[user.role] || user.role;
+            
+            // Simular carregamento do sidenav
+            document.getElementById('debug-sidenav-name').textContent = user.name || 'Usuário';
+            document.getElementById('debug-sidenav-role').textContent = roleLabels[user.role] || user.role;
+            
+            addDebugLog(`📋 Informações carregadas: ${user.name} (${user.role})`);
+        }
+
+        function manualLoadUser() {
+            addDebugLog('🔄 Carregamento manual iniciado...');
+            
+            if (window.eventosAPI && window.eventosAPI.isLoggedIn()) {
+                const user = window.eventosAPI.getCurrentUser();
+                loadUserInfo(user);
+                updateLoadingStatus('✅ Carregamento manual bem-sucedido');
+            } else {
+                addDebugLog('❌ Não é possível carregar: usuário não logado');
+                updateLoadingStatus('❌ Carregamento manual falhou: não logado');
+            }
+        }
+
+        function checkAPIStatus() {
+            addDebugLog('🔍 Verificando status da API...');
+            
+            if (typeof window.eventosAPI !== 'undefined') {
+                const isLoggedIn = window.eventosAPI.isLoggedIn();
+                const token = window.eventosAPI.getToken();
+                const user = window.eventosAPI.getCurrentUser();
+                
+                addDebugLog(`API Status: Carregado=${true}, Logado=${isLoggedIn}, Token=${token ? 'Presente' : 'Ausente'}`);
+                addDebugLog(`Usuário: ${JSON.stringify(user)}`);
+                
+                updateLoadingStatus(`API OK - Logado: ${isLoggedIn}`);
+            } else {
+                addDebugLog('❌ API Client não está definido');
+                updateLoadingStatus('❌ API Client não encontrado');
+            }
+        }
+    </script>
+</body>
+</html>
