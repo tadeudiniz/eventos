@@ -1,2 +1,2 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-skin="saas" data-bs-theme="light" data-menu-color="light" data-topbar-color="gray" data-layout-position="fixed" data-sidenav-size="default" data-sidenav-user="true">

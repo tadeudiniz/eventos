@@ -5,7 +5,7 @@
 
 class EventosAPI {
     constructor() {
-        this.baseURL = 'http://localhost:3000/api/v1';
+        this.baseURL = 'http://localhost:3001/api/v1';
         this.token = null;
         this.refreshToken = null;
         this.currentUser = null;
@@ -195,9 +195,27 @@ class EventosAPI {
     /**
      * Fazer logout
      */
-    logout() {
-        this.clearStorage();
-        console.log('👋 Logout realizado');
+    async logout() {
+        try {
+            // Tentar fazer logout via API se o token existir
+            const token = this.getToken();
+            if (token) {
+                try {
+                    await this.request('/auth/logout', {
+                        method: 'POST'
+                    });
+                    console.log('✅ Logout via API realizado com sucesso');
+                } catch (apiError) {
+                    console.warn('⚠️ Erro no logout via API (continuando com logout local):', apiError);
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ Erro durante logout via API:', error);
+        } finally {
+            // Sempre limpar dados locais, independente do resultado da API
+            this.clearStorage();
+            console.log('👋 Logout local realizado');
+        }
     }
 
     /**
@@ -329,6 +347,131 @@ class EventosAPI {
             }
         } catch (error) {
             console.error('❌ Erro ao buscar empresas:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Buscar estatísticas de eventos
+     */
+    async getEventStats() {
+        try {
+            const response = await this.makeRequest('/events/stats');
+            const data = await response.json();
+
+            if (response.ok) {
+                return data;
+            } else {
+                throw new Error(data.message || 'Erro ao buscar estatísticas de eventos');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao buscar estatísticas de eventos:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Listar eventos
+     */
+    async getEvents(params = {}) {
+        try {
+            const queryString = new URLSearchParams(params).toString();
+            const url = queryString ? `/events?${queryString}` : '/events';
+            
+            const response = await this.makeRequest(url);
+            const data = await response.json();
+
+            if (response.ok) {
+                return data;
+            } else {
+                throw new Error(data.message || 'Erro ao buscar eventos');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao buscar eventos:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Buscar evento por ID
+     */
+    async getEvent(id) {
+        try {
+            const response = await this.makeRequest(`/events/${id}`);
+            const data = await response.json();
+
+            if (response.ok) {
+                return data;
+            } else {
+                throw new Error(data.message || 'Erro ao buscar evento');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao buscar evento:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Criar evento
+     */
+    async createEvent(eventData) {
+        try {
+            const response = await this.makeRequest('/events', {
+                method: 'POST',
+                body: JSON.stringify(eventData)
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                return data;
+            } else {
+                throw new Error(data.message || 'Erro ao criar evento');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao criar evento:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Atualizar evento
+     */
+    async updateEvent(id, eventData) {
+        try {
+            const response = await this.makeRequest(`/events/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(eventData)
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                return data;
+            } else {
+                throw new Error(data.message || 'Erro ao atualizar evento');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao atualizar evento:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Excluir evento
+     */
+    async deleteEvent(id) {
+        try {
+            const response = await this.makeRequest(`/events/${id}`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                return data;
+            } else {
+                throw new Error(data.message || 'Erro ao excluir evento');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao excluir evento:', error);
             throw error;
         }
     }

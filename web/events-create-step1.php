@@ -357,12 +357,18 @@
                         return;
                     }
                     
+                    // Salvar dados do Step 1 no localStorage
+                    const step1Data = {
+                        type: selectedType,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    localStorage.setItem('event_step1_data', JSON.stringify(step1Data));
+                    console.log('Dados do Step 1 salvos no localStorage:', step1Data);
+                    
                     // Usuário está logado, pode prosseguir
                     console.log('Prosseguir para próxima etapa com tipo:', selectedType);
-                    // window.location.href = 'events-create-step2.php?type=' + selectedType;
-                    
-                    // For now, show alert
-                    alert('Próxima etapa em desenvolvimento. Tipo selecionado: ' + selectedType);
+                    window.location.href = 'events-create-step2.php?type=' + selectedType;
                 }
             });
         }

@@ -439,6 +439,21 @@ async function loadUserInfoTopbar() {
  */
 async function handleLogout() {
     try {
+        // Verificar se SweetAlert2 está disponível
+        if (typeof Swal === 'undefined') {
+            console.error('❌ SweetAlert2 não está carregado');
+            // Fallback para confirmação nativa
+            if (confirm('Tem certeza que deseja sair do sistema?')) {
+                // Limpar dados e redirecionar
+                if (window.eventosAPI) {
+                    window.eventosAPI.logout();
+                }
+                localStorage.clear();
+                window.location.href = 'auth-sign-in.php';
+            }
+            return;
+        }
+
         const result = await Swal.fire({
             title: 'Confirmar Logout',
             text: 'Tem certeza que deseja sair do sistema?',
@@ -451,32 +466,70 @@ async function handleLogout() {
         });
 
         if (result.isConfirmed) {
-            // Limpar dados do localStorage
+            // Mostrar loading
+            Swal.fire({
+                title: 'Fazendo logout...',
+                text: 'Aguarde um momento',
+                icon: 'info',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Fazer logout via API se disponível
+            let logoutSuccess = false;
             if (window.eventosAPI) {
-                window.eventosAPI.logout();
+                try {
+                    await window.eventosAPI.logout();
+                    logoutSuccess = true;
+                    console.log('✅ Logout via API realizado com sucesso');
+                } catch (apiError) {
+                    console.warn('⚠️ Erro no logout via API, continuando com logout local:', apiError);
+                    logoutSuccess = true; // Continuar mesmo se API falhar
+                }
+            } else {
+                logoutSuccess = true; // Não há API, fazer logout local
             }
             
-            // Mostrar mensagem de sucesso
-            await Swal.fire({
-                title: 'Logout realizado!',
-                text: 'Você foi desconectado com sucesso.',
-                icon: 'success',
-                timer: 1500,
-                showConfirmButton: false
-            });
-            
-            // Redirecionar para login
-            window.location.href = 'auth-sign-in.php';
+            if (logoutSuccess) {
+                // Limpar dados locais
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Mostrar mensagem de sucesso
+                await Swal.fire({
+                    title: 'Logout realizado!',
+                    text: 'Você foi desconectado com sucesso.',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                
+                // Redirecionar para login
+                window.location.href = 'auth-sign-in.php';
+            } else {
+                throw new Error('Falha no logout');
+            }
         }
     } catch (error) {
         console.error('❌ Erro no logout:', error);
-        await Swal.fire({
-            title: 'Erro',
-            text: 'Erro ao fazer logout. Redirecionando...',
-            icon: 'error',
-            timer: 1500,
-            showConfirmButton: false
-        });
+        
+        // Fallback em caso de erro
+        if (typeof Swal !== 'undefined') {
+            await Swal.fire({
+                title: 'Erro',
+                text: 'Erro ao fazer logout. Redirecionando...',
+                icon: 'error',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+        
+        // Limpar dados e redirecionar mesmo com erro
+        localStorage.clear();
+        sessionStorage.clear();
         window.location.href = 'auth-sign-in.php';
     }
 }

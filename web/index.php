@@ -7,6 +7,16 @@
 </head>
 
 <body>
+    <!-- Verificação de autenticação -->
+    <script src="assets/js/api-client.js"></script>
+    <script>
+        // Verificar autenticação ao carregar a página
+        const api = new EventosAPI();
+        if (!api.isLoggedIn()) {
+            window.location.href = 'auth-sign-in.php';
+        }
+    </script>
+
     <!-- Begin page -->
     <div class="wrapper">
 
@@ -293,23 +303,45 @@
      */
     async function carregarEstatisticasEventos() {
         try {
-            // Por enquanto, usar dados mock até termos os endpoints reais
-            const estatisticas = {
-                totalEventos: 15,
-                eventosAtivos: 8,
-                totalParticipantes: 342,
-                proximosEventos: 3
-            };
+            console.log('📊 Buscando estatísticas reais da API...');
+            
+            // Buscar dados reais da API
+            const response = await window.eventosAPI.getEventStats();
+            
+            if (response.success) {
+                const stats = response.data;
+                
+                // Atualizar cards com dados reais
+                animarContador('total-eventos', stats.total || 0);
+                animarContador('eventos-ativos', stats.active || 0);
+                // Para participantes, vamos usar um cálculo baseado nos eventos (mock por enquanto)
+                const totalParticipantes = (stats.total || 0) * 25; // Média de 25 participantes por evento
+                animarContador('total-participantes', totalParticipantes);
+                animarContador('proximos-eventos', stats.upcoming || 0);
 
-            // Atualizar cards com animação
-            animarContador('total-eventos', estatisticas.totalEventos);
-            animarContador('eventos-ativos', estatisticas.eventosAtivos);
-            animarContador('total-participantes', estatisticas.totalParticipantes);
-            animarContador('proximos-eventos', estatisticas.proximosEventos);
+                console.log('✅ Estatísticas carregadas da API:', {
+                    total: stats.total,
+                    ativos: stats.active,
+                    próximos: stats.upcoming,
+                    porTipo: stats.byType,
+                    porStatus: stats.byStatus
+                });
+            } else {
+                throw new Error('Resposta da API não foi bem-sucedida');
+            }
 
-            console.log('✅ Estatísticas carregadas');
         } catch (error) {
-            console.error('❌ Erro ao carregar estatísticas:', error);
+            console.error('❌ Erro ao carregar estatísticas da API:', error);
+            
+            // Fallback para dados padrão em caso de erro
+            console.log('⚠️ Usando dados padrão como fallback');
+            animarContador('total-eventos', 0);
+            animarContador('eventos-ativos', 0);
+            animarContador('total-participantes', 0);
+            animarContador('proximos-eventos', 0);
+            
+            // Mostrar aviso de erro (opcional)
+            mostrarAvisoEstatisticas('Não foi possível carregar as estatísticas. Verifique sua conexão.');
         }
     }
 
@@ -318,70 +350,80 @@
      */
     async function carregarListaEventos() {
         try {
-            // Por enquanto, usar dados mock até termos os endpoints reais
-            const eventos = [
-                {
-                    id: 1,
-                    nome: 'Conferência Tech 2025',
-                    organizador: { nome: 'João Silva', avatar: 'assets/images/users/user-3.jpg' },
-                    dataInicio: '2025-11-15',
-                    participantes: 150,
-                    status: 'Ativo',
-                    tipo: 'Presencial',
-                    criadoEm: '2025-10-01'
-                },
-                {
-                    id: 2,
-                    nome: 'Workshop Online de Marketing',
-                    organizador: { nome: 'Maria Santos', avatar: 'assets/images/users/user-4.jpg' },
-                    dataInicio: '2025-10-30',
-                    participantes: 85,
-                    status: 'Ativo',
-                    tipo: 'Online',
-                    criadoEm: '2025-09-15'
-                },
-                {
-                    id: 3,
-                    nome: 'Meetup de Desenvolvedores',
-                    organizador: { nome: 'Carlos Lima', avatar: 'assets/images/users/user-5.jpg' },
-                    dataInicio: '2025-12-05',
-                    participantes: 45,
-                    status: 'Ativo',
-                    tipo: 'Híbrido',
-                    criadoEm: '2025-09-20'
-                },
-                {
-                    id: 4,
-                    nome: 'Evento Cancelado',
-                    organizador: { nome: 'Ana Costa', avatar: 'assets/images/users/user-6.jpg' },
-                    dataInicio: '2025-10-20',
-                    participantes: 0,
-                    status: 'Cancelado',
-                    tipo: 'Presencial',
-                    criadoEm: '2025-09-01'
-                },
-                {
-                    id: 5,
-                    nome: 'Seminário Finalizado',
-                    organizador: { nome: 'Pedro Oliveira', avatar: 'assets/images/users/user-7.jpg' },
-                    dataInicio: '2025-09-25',
-                    participantes: 120,
-                    status: 'Finalizado',
-                    tipo: 'Online',
-                    criadoEm: '2025-08-10'
-                }
-            ];
-
-            // Renderizar eventos na tabela
-            renderizarEventosTabela(eventos);
+            console.log('📋 Buscando lista de eventos da API...');
             
-            // Atualizar informações de paginação
-            atualizarPaginacao(eventos.length, eventos.length, 1);
+            // Buscar eventos reais da API
+            const response = await window.eventosAPI.getEvents({
+                limit: 10,
+                page: 1
+            });
+            
+            if (response.success) {
+                const eventos = response.data.events || [];
+                
+                // Converter formato da API para formato da tabela
+                const eventosFormatados = eventos.map(evento => ({
+                    id: evento.id,
+                    nome: evento.title,
+                    organizador: { 
+                        nome: evento.organizer?.name || 'Organizador',
+                        avatar: 'assets/images/users/user-1.jpg' // Avatar padrão por enquanto
+                    },
+                    dataInicio: evento.startDate,
+                    participantes: evento.currentParticipants || 0,
+                    status: formatarStatusEvento(evento.status),
+                    tipo: formatarTipoEvento(evento.type),
+                    criadoEm: evento.createdAt
+                }));
 
-            console.log('✅ Lista de eventos carregada');
+                // Renderizar eventos na tabela
+                renderizarEventosTabela(eventosFormatados);
+                
+                // Atualizar informações de paginação
+                const { pagination } = response.data;
+                atualizarPaginacao(pagination.total, eventosFormatados.length, pagination.page);
+
+                console.log('✅ Lista de eventos carregada da API:', {
+                    total: eventosFormatados.length,
+                    pagina: pagination.page,
+                    totalGeral: pagination.total
+                });
+            } else {
+                throw new Error('Resposta da API não foi bem-sucedida');
+            }
+
         } catch (error) {
-            console.error('❌ Erro ao carregar lista de eventos:', error);
+            console.error('❌ Erro ao carregar lista de eventos da API:', error);
+            
+            // Renderizar estado vazio em caso de erro
+            renderizarEventosVazio('Não foi possível carregar os eventos. Tente novamente.');
         }
+    }
+
+    /**
+     * Formatar status do evento para exibição
+     */
+    function formatarStatusEvento(status) {
+        const statusMap = {
+            'draft': 'Rascunho',
+            'published': 'Publicado',
+            'active': 'Ativo',
+            'completed': 'Finalizado',
+            'cancelled': 'Cancelado'
+        };
+        return statusMap[status] || status;
+    }
+
+    /**
+     * Formatar tipo do evento para exibição
+     */
+    function formatarTipoEvento(type) {
+        const typeMap = {
+            'presencial': 'Presencial',
+            'online': 'Online',
+            'hibrido': 'Híbrido'
+        };
+        return typeMap[type] || type;
     }
 
     /**
@@ -482,6 +524,26 @@
     }
 
     /**
+     * Renderizar estado vazio ou erro
+     */
+    function renderizarEventosVazio(mensagem = 'Nenhum evento encontrado') {
+        const tbody = document.getElementById('eventos-table-body');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center py-4">
+                    <div class="text-muted">
+                        <i class="ti ti-calendar-x fs-48 mb-3 d-block"></i>
+                        <p class="mb-2">${mensagem}</p>
+                        <a href="events-create-step1.php" class="btn btn-primary btn-sm">
+                            <i class="ti ti-plus me-1"></i> Criar Primeiro Evento
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    /**
      * Funções auxiliares
      */
     function animarContador(elementId, valorFinal) {
@@ -547,6 +609,28 @@
     function mostrarErro(mensagem) {
         console.error(mensagem);
         // Aqui você pode implementar uma notificação de erro mais elaborada
+    }
+
+    /**
+     * Mostrar aviso sobre estatísticas
+     */
+    function mostrarAvisoEstatisticas(mensagem) {
+        // Mostrar um pequeno aviso nos cards de estatísticas
+        const cards = document.querySelectorAll('[id*="total-"], [id*="eventos-"], [id*="proximos-"]');
+        cards.forEach(card => {
+            const parent = card.closest('.card-body');
+            if (parent && !parent.querySelector('.stats-warning')) {
+                const warning = document.createElement('small');
+                warning.className = 'text-warning stats-warning d-block mt-1';
+                warning.innerHTML = '<i class="ti ti-alert-triangle me-1"></i>' + mensagem;
+                parent.appendChild(warning);
+                
+                // Remover aviso após 10 segundos
+                setTimeout(() => {
+                    warning.remove();
+                }, 10000);
+            }
+        });
     }
 
     /**

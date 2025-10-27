@@ -25,7 +25,7 @@
                             </a>
                             <p class="text-muted w-lg-75 mt-3 mx-auto">Let’s get you signed in. Enter your email and password to continue.</p>
                         </div>
-                        <form action="index.php">
+                        <form id="loginForm">
                             <div class="mb-3">
                                 <label for="userEmail" class="form-label">Email address <span class="text-danger">*</span></label>
                                 <div class="input-group">
@@ -48,8 +48,14 @@
                                 <a href="auth-reset-pass.php" class="text-decoration-underline link-offset-3 text-muted">Forgot Password?</a>
                             </div>
     
+                            <!-- Alert para mensagens -->
+                            <div id="loginAlert" class="alert d-none" role="alert"></div>
+    
                             <div class="d-grid">
-                                <button type="submit" class="btn btn-primary fw-semibold py-2">Sign In</button>
+                                <button type="submit" class="btn btn-primary fw-semibold py-2" id="loginBtn">
+                                    <span class="spinner-border spinner-border-sm me-2 d-none" id="loginSpinner"></span>
+                                    Sign In
+                                </button>
                             </div>
                         </form>
     
@@ -69,6 +75,66 @@
 
     <!-- end auth-fluid-->
     <?php include('partials/footer-scripts.php'); ?>
+
+    <!-- API Client -->
+    <script src="assets/js/api-client.js"></script>
+
+    <script>
+        // Inicializar API
+        const api = new EventosAPI();
+
+        // Verificar se já está logado
+        if (api.isLoggedIn()) {
+            window.location.href = 'index.php';
+        }
+
+        // Form de login
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('userEmail').value;
+            const password = document.getElementById('userPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const loginSpinner = document.getElementById('loginSpinner');
+            const loginAlert = document.getElementById('loginAlert');
+            
+            // Mostrar loading
+            loginBtn.disabled = true;
+            loginSpinner.classList.remove('d-none');
+            loginAlert.classList.add('d-none');
+            
+            try {
+                const response = await api.login(email, password, rememberMe);
+                
+                if (response.success) {
+                    // Login realizado com sucesso
+                    showAlert('Login realizado com sucesso! Redirecionando...', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.php';
+                    }, 1500);
+                } else {
+                    showAlert(response.message || 'Erro ao realizar login', 'danger');
+                }
+            } catch (error) {
+                console.error('Erro no login:', error);
+                showAlert('Erro de conexão. Verifique se o servidor está rodando.', 'danger');
+            } finally {
+                // Esconder loading
+                loginBtn.disabled = false;
+                loginSpinner.classList.add('d-none');
+            }
+        });
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('loginAlert');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alert.classList.remove('d-none');
+        }
+    </script>
 
 </body>
 

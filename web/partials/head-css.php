@@ -4,5 +4,8 @@
 <!-- Vendor css -->
 <link href="assets/css/vendors.min.css" rel="stylesheet" type="text/css">
 
+<!-- Sweet Alerts css - Carregado globalmente -->
+<link href="assets/plugins/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css">
+
 <!-- App css -->
 <link href="assets/css/app.min.css" rel="stylesheet" type="text/css">
