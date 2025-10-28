@@ -337,18 +337,15 @@
         async function loadStatistics() {
             try {
                 console.log('📊 Carregando estatísticas...');
-                
-                const response = await window.eventosAPI.getStatistics();
-                
-                if (response && response.data) {
-                    stats = response.data;
+                const response = await window.eventosAPI.getEventStats();
+                if (response) {
+                    stats = response;
                     console.log('✅ Estatísticas carregadas:', stats);
                     updateStatistics();
                 } else {
                     console.log('ℹ️ Estatísticas não disponíveis');
                     updateStatistics({});
                 }
-                
             } catch (error) {
                 console.error('❌ Erro ao carregar estatísticas:', error);
                 updateStatistics({});
@@ -442,20 +439,24 @@
         }
 
         function updateStatistics() {
-            // Atualizar cards de estatísticas
-            document.getElementById('total-events').textContent = stats.totalEvents || events.length || 0;
-            document.getElementById('published-events').textContent = stats.publishedEvents || 0;
-            document.getElementById('draft-events').textContent = stats.draftEvents || 0;
-            document.getElementById('upcoming-events').textContent = stats.upcomingEvents || 0;
-            document.getElementById('total-participants').textContent = stats.totalParticipants || 0;
-            
+            // Corrigir leitura dos dados: stats.data
+            const s = stats.data || {};
+            document.getElementById('total-events').textContent = s.total || events.length || 0;
+            document.getElementById('published-events').textContent = (s.byStatus && s.byStatus.published) ? s.byStatus.published : 0;
+            document.getElementById('draft-events').textContent = (s.byStatus && s.byStatus.draft) ? s.byStatus.draft : 0;
+            document.getElementById('upcoming-events').textContent = s.upcoming || 0;
+            // Calcular total de participantes (soma dos participantes dos eventos)
+            let totalParticipants = 0;
+            if (Array.isArray(events)) {
+                totalParticipants = events.reduce((acc, ev) => acc + (ev.participants || 0), 0);
+            }
+            document.getElementById('total-participants').textContent = totalParticipants;
+
             // Atualizar barras de progresso
-            const total = stats.totalEvents || events.length || 1;
-            
-            const publishedPercent = ((stats.publishedEvents || 0) / total) * 100;
-            const draftPercent = ((stats.draftEvents || 0) / total) * 100;
-            const upcomingPercent = ((stats.upcomingEvents || 0) / total) * 100;
-            
+            const total = s.total || events.length || 1;
+            const publishedPercent = ((s.byStatus && s.byStatus.published ? s.byStatus.published : 0) / total) * 100;
+            const draftPercent = ((s.byStatus && s.byStatus.draft ? s.byStatus.draft : 0) / total) * 100;
+            const upcomingPercent = ((s.upcoming || 0) / total) * 100;
             document.getElementById('published-progress').style.width = `${publishedPercent}%`;
             document.getElementById('draft-progress').style.width = `${draftPercent}%`;
             document.getElementById('upcoming-progress').style.width = `${upcomingPercent}%`;
@@ -480,16 +481,24 @@
         }
 
         function formatEventDate(date, time) {
-            try {
-                const dateObj = new Date(date + 'T' + (time || '00:00'));
-                return dateObj.toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                }) + (time ? ' às ' + time : '');
-            } catch (e) {
+            if (!date) return '';
+            let dateObj;
+            if (date instanceof Date) {
+                dateObj = date;
+            } else if (typeof date === 'string' && date.includes('T')) {
+                dateObj = new Date(date);
+            } else if (typeof date === 'string') {
+                // Se vier só a data, monta ISO
+                dateObj = new Date(date + 'T' + (time || '00:00'));
+            } else {
                 return date;
             }
+            if (isNaN(dateObj.getTime())) return date;
+            return dateObj.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            }) + (time ? ' às ' + time : '');
         }
 
         function formatEventLocation(event) {

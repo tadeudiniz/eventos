@@ -28,11 +28,15 @@
 
         <!-- User -->
         <div class="sidenav-user" style="background: url(assets/images/user-bg-pattern.svg); background-position: right;">
-
+            <?php
+                // Exibe o menu do evento apenas se houver um evento selecionado
+                $eventId = $_GET['id'] ?? $_SESSION['selected_event_id'] ?? null;
+                if (!$eventId):
+            ?>
             <div class="d-flex flex-column align-items-center text-center">
                 <div class="mb-1">
                     <div id="sidenav-user-avatar-container" class="avatar avatar-xxl">
-                        <img id="sidenav-user-avatar" src="assets/images/users/user-3.jpg" alt="user-image" class="rounded-circle" style="width: 102px; height: 102px; object-fit: cover; display: none;">
+                        <img src="assets/images/users/user-3.jpg" alt="user-image" class="rounded-circle mb-2 avatar-md" style="width: 102px; height: 102px; object-fit: cover; display: none;">
                         <span id="sidenav-user-initials" class="avatar-title text-bg-info rounded-circle" style="font-size: 2.2rem; font-weight: bold; display: flex; align-items: center; justify-content: center;">
                             XL
                         </span>
@@ -67,6 +71,29 @@
                     </a>
                 </div>
             </div>
+            <?php
+                else:
+            ?>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="users-profile.html" class="link-reset">
+                        <img id="sidenav-user-avatar" src="assets/images/users/user-3.jpg" alt="user-image" class="rounded-circle mb-2 avatar-md" style="width: 22px; height: 22px; object-fit: cover; display: none;">
+                        <span id="sidenav-user-initials" class="avatar-title text-bg-info rounded-circle" style="font-size: 1.6rem; width: 62px; height: 62px; font-weight: bold; display: flex; align-items: center; justify-content: center;">
+                            XL
+                        </span>
+                        <span class="sidenav-user-name fw-bold d-block" id="sidenav-user-name">Carregando...</span>
+                        <span class="fs-12 fw-semibold text-muted" id="sidenav-user-role" data-lang="user-role">Carregando...</span>
+                    </a>
+                </div>
+                <div>
+                    <a class="dropdown-toggle drop-arrow-none link-reset sidenav-user-set-icon" data-bs-toggle="dropdown" data-bs-offset="0,12" href="#!" aria-haspopup="false" aria-expanded="false">
+                        <i class="ti ti-settings fs-24 align-middle ms-1"></i>
+                    </a>
+                </div>
+            </div>
+            <?php
+                endif;
+            ?>
         </div>
 
         <!--- Sidenav Menu -->
@@ -79,6 +106,133 @@
                     <span class="menu-text" data-lang="dashboards">Dashboard</span>
                 </a>
             </li>
+
+            <?php
+                // Exibe o menu do evento apenas se houver um evento selecionado
+                $eventId = $_GET['id'] ?? $_SESSION['selected_event_id'] ?? null;
+                if ($eventId):
+            ?>
+
+            <li class="side-nav-title mt-4" data-lang="event-title">Evento</li>
+            <li class="side-nav-item">
+                <a href="event-details.php?id=<?php echo $eventId; ?>" class="side-nav-link">
+                    <span class="menu-icon"><i data-lucide="layout-dashboard"></i></span>
+                    <span class="menu-text">Painel</span>
+                </a>
+            </li>
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarEditarEvento" aria-expanded="false" aria-controls="sidebarEditarEvento" class="side-nav-link">
+                    <span class="menu-icon"><i data-lucide="edit"></i></span>
+                    <span class="menu-text">Editar evento</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarEditarEvento">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Informações</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Inscrições</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Personalização</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarFinanceiro" aria-expanded="false" aria-controls="sidebarFinanceiro" class="side-nav-link">
+                    <span class="menu-icon"><i data-lucide="wallet"></i></span>
+                    <span class="menu-text">Financeiro</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarFinanceiro">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Painel financeiro</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Pagamentos</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Receitas &amp; Despesas</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Afiliados</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarInscricoes" aria-expanded="false" aria-controls="sidebarInscricoes" class="side-nav-link">
+                    <span class="menu-icon"><i data-lucide="user-check"></i></span>
+                    <span class="menu-text">Inscrições</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarInscricoes">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Lista de inscritos</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Inscrições em atividades</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Adicionar participante</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Inscrições incompletas</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarSecretaria" aria-expanded="false" aria-controls="sidebarSecretaria" class="side-nav-link">
+                    <span class="menu-icon"><i data-lucide="clipboard-list"></i></span>
+                    <span class="menu-text">Secretaria</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarSecretaria">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Lista de frequência</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Credenciamento</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Etiquetas</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Entrada/Saída</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarProgramacao" aria-expanded="false" aria-controls="sidebarProgramacao" class="side-nav-link">
+                    <span class="menu-icon"><i data-lucide="calendar"></i></span>
+                    <span class="menu-text">Programação</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarProgramacao">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Atividades</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Palestrantes</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li class="side-nav-item">
+                <a href="#" class="side-nav-link">
+                    <span class="menu-icon"><i data-lucide="award"></i></span>
+                    <span class="menu-text">Certificados</span>
+                </a>
+            </li>
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarPaginaEvento" aria-expanded="false" aria-controls="sidebarPaginaEvento" class="side-nav-link">
+                    <span class="menu-icon"><i data-lucide="globe"></i></span>
+                    <span class="menu-text">Página do evento</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarPaginaEvento">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">SEO</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Fotos</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Vídeos</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Parceiros</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Menu</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Conteúdo/Blog</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Box de inscrição</a></li>
+                        <li class="side-nav-item"><a href="#" class="side-nav-link">Box de certificado</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li class="side-nav-item">
+                <a href="#" class="side-nav-link">
+                    <span class="menu-icon"><i data-lucide="file-text"></i></span>
+                    <span class="menu-text">Trabalhos</span>
+                </a>
+            </li>
+            <li class="side-nav-item">
+                <a href="#" class="side-nav-link">
+                    <span class="menu-icon"><i data-lucide="plug"></i></span>
+                    <span class="menu-text">Integrações</span>
+                </a>
+            </li>
+
+            <?php
+                endif;
+            ?>
 
             <li class="side-nav-title mt-4" data-lang="support-title">Suporte</li>
 

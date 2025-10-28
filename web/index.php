@@ -471,7 +471,7 @@
                     <td>
                         <div class="d-flex align-items-center">
                             <i class="ti ti-calendar me-2 text-muted"></i>
-                            <span class="fw-medium">${evento.nome}</span>
+                            <a href="event-details.php?id=${evento.id}" class="fw-medium link-reset">${evento.nome}</a>
                         </div>
                     </td>
                     <td>
@@ -505,7 +505,7 @@
                     </td>
                     <td>
                         <div class="d-flex align-items-center justify-content-center gap-1">
-                            <button class="btn btn-default btn-icon btn-sm rounded" onclick="visualizarEvento(${evento.id})" title="Visualizar">
+                            <button class="btn btn-default btn-icon btn-sm rounded" onclick="window.location.href='event-details.php?id=${evento.id}'" title="Visualizar">
                                 <i class="ti ti-eye fs-lg"></i>
                             </button>
                             <button class="btn btn-default btn-icon btn-sm rounded" onclick="editarEvento(${evento.id})" title="Editar">
